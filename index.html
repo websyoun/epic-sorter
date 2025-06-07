@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Epic: The Musical — Song Sorter</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: white;
+      color: black;
+    }
+    p.info {
+      max-width: 600px;
+      margin: 0 auto 20px;
+      color: #555;
+      font-style: italic;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    #choices {
+      display: inline-block;
+      padding: 30px 50px;
+      margin-top: 5px; /* menos espacio arriba */
+      min-width: 400px;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .btn-cancion {
+      flex: 1.5;
+      min-width: 180px;
+      border: 2px solid black;
+      border-radius: 0;
+      font-size: 22px;
+      cursor: pointer;
+      background-color: transparent;
+      color: black;
+      user-select: none;
+      padding: 15px 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 130px;
+      transition: none;
+    }
+    .btn-cancion:hover {
+      background-color: transparent;
+      color: black;
+      cursor: pointer;
+    }
+    .btn-neutrales {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+      height: 130px;
+      flex-basis: 160px;
+    }
+    .btn-neutrales button {
+      border: 2px solid black;
+      border-radius: 0;
+      font-size: 18px;
+      background-color: transparent;
+      color: black;
+      cursor: pointer;
+      padding: 12px;
+      user-select: none;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: none;
+    }
+    .btn-neutrales button:hover {
+      background-color: transparent;
+      color: black;
+      cursor: pointer;
+    }
+    h3 {
+      margin-bottom: 5px;
+    }
+    small {
+      color: #555;
+      font-size: 14px;
+      display: block;
+      margin-bottom: 15px;
+    }
+    ol {
+      text-align: left;
+      display: inline-block;
+      margin-top: 20px;
+      padding-left: 20px;
+      color: black;
+    }
+    .disclaimer {
+      font-size: 12px;
+      color: #999;
+      max-width: 600px;
+      margin: 0 auto 8px;
+    }
+    .creator {
+      font-size: 12px;
+      color: #999;
+      max-width: 600px;
+      margin: 0 auto 20px;
+    }
+    .creator a {
+      color: #999;
+      text-decoration: none;
+    }
+    .creator a:hover {
+      text-decoration: underline;
+    }
+    .credits {
+      font-size: 12px;
+      color: #999;
+      max-width: 600px;
+      margin: 20px auto 0;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <h1>Epic: The Musical Song Sorter</h1>
+  <p class="info">
+    Pick the song you like better in each battle to get an accurate list of your favorite songs from the group.<br>
+    Note: hitting 'no opinion' or 'I like both' frequently will negatively affect your results.
+  </p>
+  <p class="disclaimer">
+    This is my first sorter, I'm still working to improve it, if something is wrong, feel free to tell me :)
+  </p>
+  <p class="creator">
+    made by <a href="https://twitter.com/drealrrz" target="_blank" rel="noopener noreferrer">@drealrrz</a>
+  </p>
+  <div id="choices"></div>
+  <div id="result" style="display:none;">
+    <h2>Your final ranking</h2>
+    <ol id="ranking"></ol>
+  </div>
+
+  <div class="credits">
+    Song credits to Jorge Rivera Herrans
+  </div>
+
+  <script>
+    const canciones = [
+      "The Horse and the Infant",
+      "Just a Man",
+      "Full Speed Ahead",
+      "Open Arms",
+      "Warrior of the Mind",
+      "Polyphemus",
+      "Survive",
+      "Remember Them",
+      "My Goodbye",
+      "Storm",
+      "Luck Runs Out",
+      "Keep Your Friends Close",
+      "Ruthlessness",
+      "Pupeteer",
+      "Wouldn't You Like",
+      "Done For",
+      "There Are Other Ways",
+      "The Underworld",
+      "No Longer You",
+      "Monster",
+      "Suffering",
+      "Different Beast",
+      "Scylla",
+      "Mutiny",
+      "Thunder Bringer",
+      "Legendary",
+      "Little Wolf",
+      "We’ll Be Fine",
+      "Love in Paradise",
+      "God Games",
+      "Not Sorry For Loving You",
+      "Dangerous",
+      "Charybdis",
+      "Get in the Water",
+      "Six Hundred Strike",
+      "The Challenge",
+      "Hold Them Down",
+      "Odysseus",
+      "I Can’t Help but Wonder",
+      "Would You Fall In Love With Me Again"
+    ];
+
+    const paresElegidos = [];
+    const maxComparaciones = 50;
+    const yaComparados = new Set();
+
+    function elegirDuoAleatorio() {
+      if (paresElegidos.length >= maxComparaciones) return null;
+
+      while (true) {
+        const i = Math.floor(Math.random() * canciones.length);
+        let j = Math.floor(Math.random() * canciones.length);
+        while (j === i) j = Math.floor(Math.random() * canciones.length);
+
+        const key = i < j ? `${i}-${j}` : `${j}-${i}`;
+        if (!yaComparados.has(key)) {
+          yaComparados.add(key);
+          paresElegidos.push([canciones[i], canciones[j]]);
+          return [canciones[i], canciones[j]];
+        }
+      }
+    }
+
+    let comparacionesRealizadas = 0;
+    let batallaActual = 1;
+    const totalComparaciones = maxComparaciones;
+
+    const puntuaciones = {};
+    canciones.forEach(c => puntuaciones[c] = 0);
+
+    function mostrarSiguiente() {
+      if (comparacionesRealizadas >= totalComparaciones) {
+        mostrarResultado();
+        return;
+      }
+      const duo = elegirDuoAleatorio();
+      if (!duo) {
+        mostrarResultado();
+        return;
+      }
+      const [a, b] = duo;
+      const porcentaje = Math.max(1, Math.floor((comparacionesRealizadas / totalComparaciones) * 100));
+      const div = document.getElementById("choices");
+      div.innerHTML = `
+        <div>
+          <h3>Battle #${batallaActual}</h3>
+          <small>${porcentaje}% sorted</small>
+        </div>
+        <div class="container">
+          <button class="btn-cancion" onclick="votar(\`${a}\`)">${a}</button>
+          <div class="btn-neutrales">
+            <button onclick="votar('both')">I like both</button>
+            <button onclick="votar(null)">No opinion</button>
+          </div>
+          <button class="btn-cancion" onclick="votar(\`${b}\`)">${b}</button>
+        </div>
+      `;
+    }
+
+    function votar(ganador) {
+      if (ganador === 'both') {
+        const btns = document.querySelectorAll('.btn-cancion');
+        puntuaciones[btns[0].textContent]++;
+        puntuaciones[btns[1].textContent]++;
+      } else if (ganador) {
+        puntuaciones[ganador]++;
+      }
+      comparacionesRealizadas++;
+      batallaActual++;
+      mostrarSiguiente();
+    }
+
+    function mostrarResultado() {
+      const divChoices = document.getElementById("choices");
+      const divResult = document.getElementById("result");
+      const ol = document.getElementById("ranking");
+
+      divChoices.style.display = "none";
+      divResult.style.display = "block";
+
+      const ordenado = Object.entries(puntuaciones)
+        .sort((a, b) => b[1] - a[1])
+        .map(([nombre]) => `<li>${nombre}</li>`);
+
+      ol.innerHTML = ordenado.join('');
+    }
+
+    mostrarSiguiente();
+  </script>
+</body>
+</html>
